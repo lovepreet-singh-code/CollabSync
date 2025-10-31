@@ -1,4 +1,12 @@
 import { Request, Response } from 'express';
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: any; // or specify a more precise type for user
+        }
+    }
+}
 import Joi from 'joi';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
