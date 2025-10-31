@@ -1,0 +1,67 @@
+# ──────────────────────────────
+# Node & TypeScript
+# ──────────────────────────────
+node_modules/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ──────────────────────────────
+# Logs & Temporary files
+# ──────────────────────────────
+logs/
+tmp/
+temp/
+debug/
+.DS_Store
+
+# ──────────────────────────────
+# VS Code / JetBrains
+# ──────────────────────────────
+.vscode/
+.idea/
+
+# ──────────────────────────────
+# OS Generated Files
+# ──────────────────────────────
+Thumbs.db
+.DS_Store
+ehthumbs.db
+Desktop.ini
+
+# ──────────────────────────────
+# Docker
+# ──────────────────────────────
+/docker-data/
+*.pid
+*.seed
+*.pid.lock
+
+# ──────────────────────────────
+# Optional: if using ESLint + Prettier cache
+# ──────────────────────────────
+.eslintcache
+.prettierignore
+
+# ──────────────────────────────
+# Optional: if using Jest or Vitest
+# ──────────────────────────────
+jest.config.js
+jest.config.ts
+coverage/
+.vitest/
