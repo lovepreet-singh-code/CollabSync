@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { createClient, RedisClientType } from 'redis';
+import redis from 'redis';
+import { promisify } from 'util';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -22,14 +23,30 @@ export const connectDB = async (): Promise<void> => {
 };
 
 // Create and return a Redis client
-export const createRedisClient = (): RedisClientType => {
-    const client = createClient({ 
-        url: REDIS_URL,
-        socket: {
-            protocol: 2
+export interface RedisAsyncClient {
+    get(key: string): Promise<string | null>;
+    set(key: string, value: string, options?: { EX?: number }): Promise<'OK' | null>;
+    del(key: string): Promise<number>;
+}
+
+export const createRedisClient = (): RedisAsyncClient => {
+    const client = REDIS_URL ? (redis as any).createClient(REDIS_URL) : (redis as any).createClient();
+    client.on('error', (err: any) => console.error('Redis Client Error', err));
+
+    const getAsync = promisify(client.get).bind(client) as (key: string) => Promise<string | null>;
+    const delAsync = promisify(client.del).bind(client) as (key: string) => Promise<number>;
+    const setAsyncBase = promisify(client.set).bind(client) as (...args: any[]) => Promise<'OK' | null>;
+
+    const setAsync = (key: string, value: string, options?: { EX?: number }): Promise<'OK' | null> => {
+        if (options?.EX) {
+            return setAsyncBase(key, value, 'EX', options.EX);
         }
-    });
-    client.on('error', (err) => console.error('Redis Client Error', err));
-    client.connect().catch(console.error);
-    return client;
+        return setAsyncBase(key, value);
+    };
+
+    return {
+        get: getAsync,
+        set: setAsync,
+        del: delAsync,
+    };
 };

@@ -10,7 +10,7 @@ declare global {
 import Joi from 'joi';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { createUser, findUserByEmail } from '../services/user.service';
+import { createUser, findUserByEmail, findUserById } from '../services/user.service';
 import { success, error } from '../utils/response';
 import { JWT_SECRET } from '../config';
 import { AppError } from '../utils/response';
@@ -50,7 +50,18 @@ export const login = async (req: Request, res: Response) => {
     return success(res, { user: { ...user.toObject(), password: undefined }, token }, 'Login successful');
 };
 
-export const getProfile = (req: Request, res: Response) => {
-    const user = req.user; // Assuming req.user is set by the auth middleware
-    return success(res, { ...user.toObject(), password: undefined }, 'User profile retrieved successfully');
+export const getProfile = async (req: Request, res: Response) => {
+    const { userId } = req.user; // Get userId from the auth middleware
+    
+    // Import the findUserById function at the top of the file if not already imported
+    const user = await findUserById(userId);
+
+    
+    if (!user) {
+        return error(res, 'User not found', 404);
+    }
+    
+    // Check if toObject exists before calling it
+    const userData = user.toObject ? user.toObject() : user;
+    return success(res, { ...userData, password: undefined }, 'User profile retrieved successfully');
 };

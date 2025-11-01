@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+// @ts-ignore
 import morgan from 'morgan';
 import authRoutes from './routes/auth.routes';
 import { AppError, error } from './utils/response';

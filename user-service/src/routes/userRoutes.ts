@@ -3,9 +3,10 @@ import { createUser, getUser, updateUser, deleteUser } from '../controllers/user
 
 const router = Router();
 
-router.post('/users', createUser);
-router.get('/users/:id', getUser);
-router.put('/users/:id', updateUser);
-router.delete('/users/:id', deleteUser);
+// Mounted at /api/users in index.ts
+router.post('/', createUser);
+router.get('/:id', getUser);
+router.put('/:id', updateUser);
+router.delete('/:id', deleteUser);
 
 export default router;

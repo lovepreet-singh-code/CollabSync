@@ -7,7 +7,7 @@ const redisClient = createRedisClient();
 export const createUser = async (payload: Partial<IUser>): Promise<IUser> => {
     const user = new UserModel(payload);
     await user.save();
-    user.password = undefined; // Remove password before returning
+    delete (user as any).password; // Remove password before returning
     return user;
 };
 

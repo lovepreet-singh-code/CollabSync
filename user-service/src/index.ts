@@ -1,5 +1,6 @@
 import express from 'express';
 import userRoutes from './routes/userRoutes';
+import authRoutes from './routes/auth.routes';
 import dotenv from 'dotenv';
 import { connectDB, createRedisClient } from './config';
 
@@ -10,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use('/api/users', userRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 const startServer = async () => {
     try {

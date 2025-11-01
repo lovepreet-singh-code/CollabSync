@@ -1,37 +1,45 @@
 import { Request, Response } from 'express';
-import User from '../models/User'; // Assuming you have a User model defined
-
-export const getUsers = async (req: Request, res: Response) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching users' });
-    }
-};
+import { createUser as createUserSvc, findUserById, updateUser as updateUserSvc, deleteUser as deleteUserSvc } from '../services/user.service';
+import { success, error } from '../utils/response';
 
 export const createUser = async (req: Request, res: Response) => {
-    const { name, email, password } = req.body;
-    const newUser = new User({ name, email, password });
-
     try {
-        await newUser.save();
-        res.status(201).json(newUser);
-    } catch (error) {
-        res.status(400).json({ message: 'Error creating user' });
+        const user = await createUserSvc(req.body);
+        return success(res, { ...user.toObject(), password: undefined }, 'User created successfully', 201);
+    } catch (err: any) {
+        return error(res, err.message || 'Error creating user', 400);
     }
 };
 
-export const getUserById = async (req: Request, res: Response) => {
+export const getUser = async (req: Request, res: Response) => {
     const { id } = req.params;
-
     try {
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching user' });
+        const user = await findUserById(id);
+        if (!user) return error(res, 'User not found', 404);
+        return success(res, { ...user.toObject(), password: undefined }, 'User fetched successfully');
+    } catch (err: any) {
+        return error(res, err.message || 'Error fetching user', 500);
+    }
+};
+
+export const updateUser = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const updated = await updateUserSvc(id, req.body);
+        if (!updated) return error(res, 'User not found', 404);
+        return success(res, { ...updated.toObject(), password: undefined }, 'User updated successfully');
+    } catch (err: any) {
+        return error(res, err.message || 'Error updating user', 400);
+    }
+};
+
+export const deleteUser = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    try {
+        const deleted = await deleteUserSvc(id);
+        if (!deleted) return error(res, 'User not found', 404);
+        return success(res, { id }, 'User deleted successfully');
+    } catch (err: any) {
+        return error(res, err.message || 'Error deleting user', 400);
     }
 };

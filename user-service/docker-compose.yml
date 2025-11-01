@@ -1,0 +1,33 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  user-service:
+    build: .
+    container_name: user-service
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/userdb
+      - REDIS_URL=redis://redis:6379
+      - PORT=4001
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - "4001:4001"
+
+volumes:
+  mongo_data:

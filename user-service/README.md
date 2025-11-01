@@ -26,6 +26,71 @@ To get started with the User Service, follow these steps:
    npm run dev
    ```
 
+## Quick Start (Local)
+
+If you already have the repo, you can run the service locally with these simple steps:
+
+- Install dependencies:
+  ```bash
+  npm install
+  ```
+- Copy environment template and adjust values as needed:
+  ```bash
+  cp .env.example .env
+  ```
+- Start the development server:
+  ```bash
+  npm run dev
+  ```
+
+## Docker Compose (Mongo + Redis + User Service)
+
+Use the following `docker-compose.yml` to spin up MongoDB, Redis, and the User Service together:
+
+```yaml
+version: "3.8"
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  user-service:
+    build: .
+    container_name: user-service
+    env_file:
+      - .env
+    environment:
+      # Ensure these are present in your .env or override here as needed
+      - MONGO_URI=mongodb://mongo:27017/user_service_db
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo_data:
+```
+
+Run it with:
+
+```bash
+docker compose up -d --build
+```
+
+The service will connect to MongoDB via `mongodb://mongo:27017/` and Redis via `redis://redis:6379` using the internal Docker network.
+
 ## Scripts
 
 - `dev`: Starts the development server with hot reloading.
