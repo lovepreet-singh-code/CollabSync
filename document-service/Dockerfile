@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
@@ -6,10 +6,9 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY . .
+COPY src ./src
+COPY tsconfig.json ./
 
-RUN npm run build
+EXPOSE 4002
 
-EXPOSE 3001
-
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
