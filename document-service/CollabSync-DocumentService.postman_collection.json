@@ -1,0 +1,128 @@
+{
+  "info": {
+    "name": "CollabSync Document Service",
+    "_postman_id": "d4f7d6b1-6f64-4c9b-9f1f-collection-docs",
+    "description": "Postman collection for document-service routes with JWT auth examples.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Document",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Project Plan\",\n  \"content\": \"Initial draft content\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/documents",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "documents"]
+        }
+      }
+    },
+    {
+      "name": "Get Documents",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/documents",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "documents"]
+        }
+      }
+    },
+    {
+      "name": "Get Document By ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/documents/{{id}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "documents", "{{id}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Document",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Project Plan (Updated)\",\n  \"content\": \"Updated draft content\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/documents/{{id}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "documents", "{{id}}"]
+        }
+      }
+    },
+    {
+      "name": "Delete Document",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/documents/{{id}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "documents", "{{id}}"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4002"
+    },
+    {
+      "key": "jwt",
+      "value": "{{generate_test_jwt}}"
+    }
+  ]
+}
