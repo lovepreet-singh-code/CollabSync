@@ -58,6 +58,10 @@ beforeEach(async () => {
 afterAll(async () => {
   await mongoose.connection.close();
   if (mongo) {
-    await mongo.stop();
+    try {
+      await mongo.stop();
+    } catch (e) {
+      // Windows sometimes throws EPERM on kill; swallow to avoid failing the suite
+    }
   }
 });
