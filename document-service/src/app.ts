@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import { AppError, error } from './utils/response';
+import documentRoutes from './routes/document.routes';
 
 const app = express();
 
@@ -13,7 +14,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Mount routes
-// app.use('/api/v1/documents', documentRoutes);
+app.use('/api/v1/documents', documentRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response, next: NextFunction) => {
