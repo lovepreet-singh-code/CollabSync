@@ -1,6 +1,8 @@
 import app from './app';
+import http from 'http';
 import mongoose from 'mongoose';
 import { PORT, connectDB, createRedisClient, createKafkaProducer } from './config';
+import { initSocket } from './events/socket';
 
 async function start() {
   try {
@@ -28,7 +30,9 @@ async function start() {
     const kafkaProducer = await createKafkaProducer();
     console.log('Kafka producer connected');
 
-    const server = app.listen(PORT, () => {
+    const server = http.createServer(app);
+    const io = initSocket(server);
+    server.listen(PORT, () => {
       console.log(`Document service running on http://localhost:${PORT}`);
     });
 

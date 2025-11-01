@@ -1,4 +1,5 @@
 import { DocumentModel, IDocument } from '../models/document.model';
+import { EditHistoryModel } from '../models/edit-history.model';
 import { Producer } from 'kafkajs';
 import { createKafkaProducer, createRedisClient } from '../config';
 import { Types } from 'mongoose';
@@ -101,25 +102,73 @@ export class DocumentService {
       throw new Error('Not authorized to update this document');
     }
 
-    const updated = await DocumentModel.findByIdAndUpdate(id, updates, { new: true });
-    if (updated) {
-      // Update cache for the document
-      await this.setAsync(docCacheKey(id), JSON.stringify(updated), 'EX', CACHE_TTL_SECONDS);
-
-      // Invalidate owner list caches
-      await this.invalidateOwnerCaches(String(updated.ownerId));
-
-      // Produce Kafka event
-      await this.producer.send({
-        topic: 'document.updated',
-        messages: [
-          {
-            key: String(updated._id),
-            value: JSON.stringify({ id: updated._id, ownerId: updated.ownerId, timestamp: Date.now() }),
-          },
-        ],
-      });
+    // Optimistic concurrency control: require client-provided version
+    const expectedVersion = (updates as any).version;
+    if (typeof expectedVersion !== 'number' || expectedVersion < 1) {
+      throw new Error('Version required');
     }
+
+    // Remove version from updates payload, it will be incremented atomically
+    const { version: _ignoreVersion, ...rest } = updates as any;
+
+    const updated = await DocumentModel.findOneAndUpdate(
+      { _id: id, version: expectedVersion },
+      { $set: rest, $inc: { version: 1 } },
+      { new: true }
+    );
+
+    if (!updated) {
+      // No match found for expected version ⇒ conflict
+      throw new Error('Version conflict');
+    }
+
+    // Update cache for the document
+    await this.setAsync(docCacheKey(id), JSON.stringify(updated), 'EX', CACHE_TTL_SECONDS);
+
+    // Invalidate owner list caches
+    await this.invalidateOwnerCaches(String(updated.ownerId));
+
+    // Produce Kafka events
+    await this.producer.send({
+      topic: 'document.updated',
+      messages: [
+        {
+          key: String(updated._id),
+          value: JSON.stringify({ id: updated._id, ownerId: updated.ownerId, timestamp: Date.now() }),
+        },
+      ],
+    });
+
+    await this.producer.send({
+      topic: 'document.version.updated',
+      messages: [
+        {
+          key: String(updated._id),
+          value: JSON.stringify({
+            id: updated._id,
+            ownerId: updated.ownerId,
+            previousVersion: expectedVersion,
+            version: updated.version,
+            timestamp: Date.now(),
+          }),
+        },
+      ],
+    });
+
+    // Record edit history
+    try {
+      await EditHistoryModel.create({
+        documentId: updated._id,
+        userId: new Types.ObjectId(userId),
+        changes: rest,
+        previousVersion: expectedVersion,
+        version: updated.version,
+      });
+    } catch (e) {
+      // Non-fatal
+      console.warn('Failed to record edit history', e);
+    }
+
     return updated;
   }
 

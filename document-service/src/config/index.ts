@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import Joi from 'joi';
 import mongoose from 'mongoose';
 import * as redis from 'redis';
-import { Kafka, Producer } from 'kafkajs';
+import { Kafka, Producer, Partitioners } from 'kafkajs';
 
 // Load environment variables
 dotenv.config();
@@ -68,8 +68,28 @@ export const createRedisClient = () => {
 
 // Helper: Create and connect Kafka producer
 export const createKafkaProducer = async (): Promise<Producer> => {
-  const kafka = new Kafka({ clientId: KAFKA_CLIENT_ID, brokers: KAFKA_BROKERS });
-  const producer = kafka.producer();
-  await producer.connect();
-  return producer;
+  // Optional Kafka in dev: allow disabling or falling back to no-op producer
+  const enableKafkaEnv = process.env.ENABLE_KAFKA;
+  const ENABLE_KAFKA = enableKafkaEnv === undefined ? true : enableKafkaEnv !== 'false';
+
+  class NoopProducer {
+    async send(_args: any) { /* no-op */ }
+    async disconnect() { /* no-op */ }
+  }
+
+  if (!ENABLE_KAFKA || !KAFKA_BROKERS || KAFKA_BROKERS.length === 0) {
+    console.warn('Kafka disabled or brokers not configured; using NoopProducer');
+    return (new NoopProducer() as unknown) as Producer;
+  }
+
+  try {
+    const kafka = new Kafka({ clientId: KAFKA_CLIENT_ID, brokers: KAFKA_BROKERS });
+    // Silence partitioner warning by explicitly selecting a partitioner
+    const producer = kafka.producer({ createPartitioner: Partitioners.DefaultPartitioner });
+    await producer.connect();
+    return producer;
+  } catch (err) {
+    console.error('Kafka connect failed; falling back to NoopProducer:', err);
+    return (new NoopProducer() as unknown) as Producer;
+  }
 };

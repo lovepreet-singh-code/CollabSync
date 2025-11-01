@@ -89,7 +89,7 @@ export const updateDocument = async (req: Request, res: Response, _next: NextFun
     title: Joi.string().min(1).optional(),
     content: Joi.string().allow('').optional(),
     sharedWith: sharedWithSchema.optional(),
-    version: Joi.number().integer().min(1).optional(),
+    version: Joi.number().integer().min(1).required(),
   }).min(1);
 
   const paramsValidation = paramsSchema.validate(req.params);
@@ -114,6 +114,12 @@ export const updateDocument = async (req: Request, res: Response, _next: NextFun
   } catch (err: any) {
     if (err?.message?.toLowerCase().includes('not authorized')) {
       return error(res, 'Not authorized to update this document', 403);
+    }
+    if (err?.message?.toLowerCase().includes('version required')) {
+      return error(res, 'Version is required for update', 400);
+    }
+    if (err?.message?.toLowerCase().includes('version conflict')) {
+      return error(res, 'Version conflict: document has been updated by another process', 409);
     }
     return error(res, err.message || 'Failed to update document', 500);
   }
